@@ -1,7 +1,7 @@
 CXXFLAGS+= -std=c++17 -g -Wall -O0 -gdwarf -ggdb
 
 #select appropriate g++ for your platform
-CXX=g++-10
+CXX=g++-11
 
 #CXX=g++
 
