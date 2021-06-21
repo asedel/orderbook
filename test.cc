@@ -8,7 +8,7 @@
 BOOST_AUTO_TEST_CASE( my_test )
 {
   Order myOrder1('N', 1, 2, 3, 4, true, "IBM");
-  Order *pMyOrder1('N', 1, 2, 3, 4, true, "IBM");
+  Order *pMyOrder1 = new Order('N', 1, 2, 3, 4, true, "IBM");
 
   BOOST_CHECK( myOrder1 == *pMyOrder1 );
   delete pMyOrder1;
@@ -30,8 +30,8 @@ BOOST_AUTO_TEST_CASE( my_test )
 BOOST_AUTO_TEST_CASE( order_parser_test )
 {
   Order *a = OrderParser::parse("F");
-  Order *b = OrderParser::parse("N,1,IBM,10,100,B,1");
-  Order *c = OrderParser::parse("C,1,1");
+  Order *b = OrderParser::parse("C,1,1");
+  Order *c = OrderParser::parse("N,1,IBM,10,100,B,1");
   // insert more in here and check all attributes line up using getters
 
   // insert some corner cases involving decimals and bad cases with non ints for integers etc
@@ -41,5 +41,7 @@ BOOST_AUTO_TEST_CASE( order_parser_test )
 
   //@todo build them all by hand and compare them with equality operators
 
-  delete a, b, c;
+  delete a;
+  delete b;
+  delete c;
 }

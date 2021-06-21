@@ -36,19 +36,21 @@ Order* OrderParser::parse(const string& input) {
   Order::OrderType ot = Order::GetOrderType(strs[0][0]);
   if ( strs[0].size() != 1 || ot == Order::eINVALID || ot == Order::eLAST ) {
     std::cerr << "Invalid Order Type!" << std::endl;
-    return null;
+    return NULL;
   }
 
   Order *result;
   switch (ot) {
     case Order::eFLUSH:
-      result = buildOrder(ot);
+      result = Order::buildOrder(ot);
+      break;
     case Order::eCANCEL:
-      result = buildOrder(ot,
+      result = Order::buildOrder(ot,
                           std::stoi(strs[1]), //user
                           std::stoi(strs[2])); //uoid
+      break;
     case Order::eNEW:
-      result = buildOrder(ot,
+      result = Order::buildOrder(ot,
                           std::stoi(strs[6]), //uoid
                           std::stoi(strs[1]), //user
                           std::stoi(strs[3]), //price
@@ -56,8 +58,10 @@ Order* OrderParser::parse(const string& input) {
                           strs[5][0] == 'B' ? true : false, //side
                           strs[2] //symbol
         );
+      break;
     default: //unreachable as its prehandled
-      result = null;
+      result = NULL;
+      break;
   }
 
   return result;

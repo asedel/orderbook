@@ -16,6 +16,10 @@ using std::string;
     and as in the case of new order where there is storage involved we
     have no extra fields being stored
 */
+
+//fwd declare for pointer
+class OrderBook;
+
 class Order {
 public:
   enum OrderType {
@@ -48,12 +52,15 @@ private:
   int user;
   int price;
   int qty;
+  int levelId;
   OrderType otype;
   bool isBuy;
+  OrderBook *bookId;
   string symbol;
 public:
 
-  Order* buildOrder(char otype, int user_oid=0, int user_id=0, int o_price=0, int o_qty=0, bool o_side=false, string symbol="");
+  static Order* buildOrder(char otype, int user_oid=0, int user_id=0, int o_price=0, int o_qty=0, bool o_side=false, string symbol="");
+  static Order* buildOrder(OrderType otype, int user_oid=0, int user_id=0, int o_price=0, int o_qty=0, bool o_side=false, string symbol="");
 
   // These should only be used by tests and not publicly
   //universal constructor through default values
@@ -95,16 +102,13 @@ public:
 
   bool getIsBuy() const;
   void setIsBuy(bool);
-};
 
-Order * Order::buildOrder(char otype, int user_oid, int user_id, int o_price, int o_qty, bool o_side, string o_symbol )
-{
-  OrderType ot = GetOrderType(otype);
-  if ( ot != eINVALID && ot != eLAST ) {
-    return new Order(ot, user_oid, user_id, o_price, o_qty, o_side, o_symbol);
-  } else {
-    return null;
-}
+  int getBookId() const;
+  void setBookId();
+
+  int getLevelId() const;
+  void setLevelId();
+};
 
 Order::Order( char ottype, int user_oid, int user_id, int o_price, int o_qty, bool o_side, string o_symbol )
     : Order( GetOrderType(ottype), user_oid, user_id, o_price, o_qty, o_side, o_symbol)
@@ -123,6 +127,22 @@ Order::Order( OrderType ot, int user_oid, int user_id, int o_price, int o_qty, b
   }
 
   otype = ot;
+}
+
+inline Order* Order::buildOrder(char otype, int user_oid, int user_id, int o_price, int o_qty, bool o_side, string o_symbol )
+{
+  OrderType ot = GetOrderType(otype);
+  return buildOrder(ot, user_oid, user_id, o_price, o_qty, o_side, o_symbol);
+}
+
+inline Order* Order::buildOrder(OrderType ot, int user_oid, int user_id, int o_price, int o_qty, bool o_side, string o_symbol )
+{
+  if ( ot != eINVALID && ot != eLAST ) {
+    Order *p = new Order(ot, user_oid, user_id, o_price, o_qty, o_side, o_symbol);
+    return p;
+  } else {
+    return NULL;
+  }
 }
 
 inline int Order::getUserOrderId() const
@@ -191,6 +211,26 @@ sets value to input bool, true for buy
 void Order::setIsBuy(bool o_isbuy)
 {
   isBuy = o_isbuy;
+}
+
+inline OrderBook* Order::getBook() const
+{
+  return book;
+}
+
+inline void Order::setBook(Order *book)
+{
+  this->book = book;
+}
+
+inline int Order::getLevelId() const
+{
+  return levelId;
+}
+
+inline void Order::setLevelId(int levelId)
+{
+  this->levelId = levelId;
 }
 
 bool operator==(const Order &rhs, const Order &lhs) {
