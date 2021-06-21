@@ -3,46 +3,12 @@
 
 #include <string>
 #include <vector>
-#include <list>
-#include <unordered_map>
 
-using std::vector
-using std::list
+using std::string;
+using std::vector;
 
 #include "order.h"
-
-/** Represent a level in the book
-
-    A level is a number of orders sorted by time for a given symbol
-*/
-class Level {
-public:
-  Level(int price=0)
-    : valid(false)
-    , price(price)
-    {}
-
-  ~Level();
-
-  /* mutators */
-  void addOrder(Order *o);
-  void cancelOrder(Order *o);
-  void flushOrders();
-  void setPrice(int price);
-  void setValid(bool b);
-
-  /* accessors */
-  int getQty() const { return qty; }
-  int getPrice() const { return price; }
-  int getNumOrders() const { return orders.size() }
-  int getValid() const { return valid }
-
-private:
-  bool valid;
-  int qty; // total qty at level
-  int price; //price of level
-  List<Order *> orders; // kept sorted by time
-};
+#include "level.h"
 
 /** Models an OrderBook for a single symbol has a bid side and ask side
 
@@ -74,7 +40,7 @@ private:
 **/
 class OrderBook {
 public:
-  DEFAULT_NUM_LEVELS
+  const int DEFAULT_NUM_LEVELS = 16;
   OrderBook(const string& symbol, int num_levels = DEFAULT_NUM_LEVELS);
 
   /** Insert an Order and carry out approriate matching if need be*/
@@ -101,23 +67,60 @@ private:
 
 };
 
-class OrderManager {
-public:
-  OrderManager();
-  ~OrderManager();
+inline OrderBook::OrderBook(const string& symbol, int num_levels)
+{
+  flushOrders();
+}
 
-  void addOrder(Order *o);
-  void cancelOrder(Order *o);
-  void flushOrders();
+OrderBook::flushOrders() {
+  asks.clear();
+  bids.clear();
 
-private:
-  //could speed this up with symbol to int mapping so that i could use
-  //book id's would generally do this by getting all symbols and
-  //enumerating
-  std::unordered_map<const std::string, OrderBook*> book_map;
-  std::unordered_map<int, Order*> orders_by_id; // would be nice to
-                                                // use a vector if we
-                                                // can guarantee
-                                                // theyll be tight and
-                                                // monotonicincreasing...
+  for ( Order *o : order_by_id ) {
+    delete o;
+  }
+  order_by_id.clear();
+
+  //clear out
+  bestbid_price = bestbid_qty = bestoffer_price = bestoffer_qty = 0;
+
+  //reset
+  asks.resize(num_levels);
+  bids.resize(num_levels);
+}
+
+inline void OrderBook::addOrder(Order *o)
+{
+  //is it bid or ask
+  if ( o->getIsBuy() ) {
+    // buy/bid
+    if ( o->getPrice > bestbid_price ) {
+      bestbid_price = o->getPrice();
+      bestbid_qty = o->getQty();
+      //insert level at top
+    } else if ( o->getPrice == bestbid_price ) {
+      bestbid_qty += o->getQty();
+      // add to top level
+    }
+    else {
+      //find and or insert level
+    }
+  }
+  else {
+    //its a sell/ask
+    if ( o->getPrice < bestoffer_price ) {
+      bestoffer_price = o->getPrice();
+      bestoffer_qty = o->getQty();
+      //insert a level at top
+    } else if ( o->getPrice == bestoffer_price ) {
+      bestoffer_qty += o->getQty();
+      // add to top level
+    }
+    else {
+      //find and or insert level
+    }
+  }
+
+}
+
 #endif
