@@ -94,7 +94,7 @@ public:
 };
 
 Order::Order( char ottype, int user_oid, int user_id, int o_price, int o_qty, bool o_side, string o_symbol )
-    : Order( GetOrderType(otype), user_oid, user_id, o_price, o_qty, o_side, o_symbol)
+    : Order( GetOrderType(ottype), user_oid, user_id, o_price, o_qty, o_side, o_symbol)
     {}
 
 Order::Order( OrderType ot, int user_oid, int user_id, int o_price, int o_qty, bool o_side, string o_symbol )
