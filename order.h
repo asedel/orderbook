@@ -55,7 +55,7 @@ private:
   int levelId;
   OrderType otype;
   bool isBuy;
-  OrderBook *bookId;
+  OrderBook *obook;
   string symbol;
 public:
 
@@ -103,11 +103,11 @@ public:
   bool getIsBuy() const;
   void setIsBuy(bool);
 
-  int getBookId() const;
-  void setBookId();
+  OrderBook* getBook() const;
+  void setBook(OrderBook *);
 
   int getLevelId() const;
-  void setLevelId();
+  void setLevelId(int levelId);
 };
 
 Order::Order( char ottype, int user_oid, int user_id, int o_price, int o_qty, bool o_side, string o_symbol )
@@ -215,12 +215,12 @@ void Order::setIsBuy(bool o_isbuy)
 
 inline OrderBook* Order::getBook() const
 {
-  return book;
+  return obook;
 }
 
-inline void Order::setBook(Order *book)
+inline void Order::setBook(OrderBook *book)
 {
-  this->book = book;
+  this->obook = book;
 }
 
 inline int Order::getLevelId() const
