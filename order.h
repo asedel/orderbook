@@ -25,12 +25,11 @@ public:
     eFLUSH = 3,
 
     eLAST
-  }
+  };
 
   /* requires checking value returned to avoid exceptions for speed */
-  static GetOrderType(char input) {
-    try {
-      switch (input) {
+  static OrderType GetOrderType(char input) {
+    switch (input) {
       case 'N':
         return eNEW;
       case 'C':
@@ -39,7 +38,6 @@ public:
         return eFLUSH;
       default:
         return eINVALID;
-      }
     }
   }
 
@@ -51,63 +49,39 @@ private:
   int price;
   int qty;
   OrderType otype;
-  boolean isBuy;
+  bool isBuy;
   string symbol;
 public:
   //universal constructor through default values
   //perhaps split out into seperate functions
-  Order(char otype, int user_oid=0, int user_id=0, int o_price=0, int o_qty=0, boolean o_side=false, string symbol="");
-  Order(OrderType ot, int user_oid=0, int user_id=0, int o_price=0, int o_qty=0, boolean o_side=false, string symbol="");
+  Order(char otype, int user_oid=0, int user_id=0, int o_price=0, int o_qty=0, bool o_side=false, string symbol="");
+  Order(OrderType ot, int user_oid=0, int user_id=0, int o_price=0, int o_qty=0, bool o_side=false, string symbol="");
 
   OrderType getType() const {
     return otype;
-  }
-
-  Order( char ot, int user_oid, int user_id, int o_price, int o_qty, boolean o_side, string o_symbol )
-    : Order( GetOrderType(ot), user_oid, user_id, o_price, o_qty, o_side, o_symbol)
-
-  Order( OrderType ot, int user_oid, int user_id, int o_price, int o_qty, boolean o_side, string o_symbol )
-    : userOrderId(user_oid)
-    , user(user_id)
-    , price(o_price)
-    , qty(o_qty)
-    , isBuy(o_side),
-    , symbol(o_symbol)
-    {
-      try {
-        if ( ot == eINVALID || ot == eLAST ) {
-          throw InvalidOTypeException();
-        }
-      }
-      otype = ot;
-    }
+  };
 
   void setType(char t) {
     OrderType temp = GetOrderType(t);
     if ( temp != eINVALID ) {
       otype = temp;
     } else {
-      std::cerr << "Invalid Ordertype from : "<< t << "! not changing type." << endl;
+      std::cerr << "Invalid Ordertype from : "<< t << "! not changing type." << std::endl;
     }
   }
 
-  int getUserOrderId() const {
-    return userOrderId;
-  }
-
-  void setUserOrderId(int uoid) {
-    userOrderId = uoid;
-  }
+  int getUserOrderId() const;
+  void setUserOrderId(int uoid);
 
   int getUser() const;
-  void setUser(int user)
+  void setUser(int user);
 
   //copy the string until we determine I need something else
   string getSymbol() const;
   //take input via swap
   void setSymbol(string symbol);
   //take input via move
-  void setSymbol(&&string symbol);
+  void setSymbol(string&& symbol);
 
   int getPrice() const;
   void setPrice(int);
@@ -115,67 +89,84 @@ public:
   int getQty() const;
   void setQty(int);
 
-  boolean getIsBuy() const;
-  void setIsBuy(boolean) const;
+  bool getIsBuy() const;
+  void setIsBuy(bool);
 };
 
+Order::Order( char ottype, int user_oid, int user_id, int o_price, int o_qty, bool o_side, string o_symbol )
+    : Order( GetOrderType(otype), user_oid, user_id, o_price, o_qty, o_side, o_symbol)
+    {}
 
+Order::Order( OrderType ot, int user_oid, int user_id, int o_price, int o_qty, bool o_side, string o_symbol )
+  : userOrderId(user_oid)
+  , user(user_id)
+  , price(o_price)
+  , qty(o_qty)
+  , isBuy(o_side)
+  , symbol(o_symbol)
+{
+  if ( ot == eINVALID || ot == eLAST ) {
+    throw InvalidOTypeException();
+  }
 
-inline int getUserOrderId() const
+  otype = ot;
+}
+
+inline int Order::getUserOrderId() const
 {
   return userOrderId;
 }
 
-inline void setUserOrderId(int uoid)
+inline void Order::setUserOrderId(int uoid)
 {
   this->userOrderId = uoid;
 }
 
-inline getUser() const
+inline int Order::getUser() const
 {
    return user;
 }
 
-inline setUser( int user )
+inline void Order::setUser( int user )
 {
-  this->user = user
+  this->user = user;
 }
 
-inline getSymbol() const
+inline string Order::getSymbol() const
 {
   return symbol;
 }
 
-inline setSymbol(string symbol)
+inline void Order::setSymbol(string symbol)
 {
   std::swap(this->symbol, symbol);
 }
 
-inline setSymbol(string&& symbol) {
-  this->symbol = std::move(symbol)
+inline void Order::setSymbol(string&& symbol) {
+  this->symbol = std::move(symbol);
 }
 
-inline getPrice() const
+inline int Order::getPrice() const
 {
   return price;
 }
 
-inline void setPrice(int o_price)
+inline void Order::setPrice(int o_price)
 {
   price = o_price;
 }
 
-inline getQty() const
+inline int Order::getQty() const
 {
   return qty;
 }
 
-inline void setQty(int o_qty)
+inline void Order::setQty(int o_qty)
 {
   qty = o_qty;
 }
 
-inline getIsBuy() const
+inline bool Order::getIsBuy() const
 {
   return isBuy;
 }
@@ -184,7 +175,7 @@ inline getIsBuy() const
 sets value to input bool, true for buy
 @param [in] o_idbuy the desired boolean state
  */
-void setIsBuy(boolean o_isbuy)
+void Order::setIsBuy(bool o_isbuy)
 {
   isBuy = o_isbuy;
 }

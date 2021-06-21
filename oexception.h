@@ -3,12 +3,10 @@
 
 #include <exception>
 
-class InvalidOTypeException: public exception
+class InvalidOTypeException : public std::exception
 {
 public:
-  InvalidOTypeException()
-    : exception()
-  {}
+  InvalidOTypeException() {}
 
   virtual const char* what() const throw()
   {
