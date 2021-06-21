@@ -3,6 +3,9 @@
 
 #include <string>
 #include <iostream>
+
+#include "oexception.h"
+
 using std::string;
 
 /** Order class models an Order object
@@ -53,11 +56,31 @@ private:
 public:
   //universal constructor through default values
   //perhaps split out into seperate functions
-  Order(OrderType ot, int user_oid=0, int user_id=0, string symbol="", int o_price=0, int o_qty=0, boolean o_side=false);
+  Order(char otype, int user_oid=0, int user_id=0, int o_price=0, int o_qty=0, boolean o_side=false, string symbol="");
+  Order(OrderType ot, int user_oid=0, int user_id=0, int o_price=0, int o_qty=0, boolean o_side=false, string symbol="");
 
   OrderType getType() const {
     return otype;
   }
+
+  Order( char ot, int user_oid, int user_id, int o_price, int o_qty, boolean o_side, string o_symbol )
+    : Order( GetOrderType(ot), user_oid, user_id, o_price, o_qty, o_side, o_symbol)
+
+  Order( OrderType ot, int user_oid, int user_id, int o_price, int o_qty, boolean o_side, string o_symbol )
+    : userOrderId(user_oid)
+    , user(user_id)
+    , price(o_price)
+    , qty(o_qty)
+    , isBuy(o_side),
+    , symbol(o_symbol)
+    {
+      try {
+        if ( ot == eINVALID || ot == eLAST ) {
+          throw InvalidOTypeException();
+        }
+      }
+      otype = ot;
+    }
 
   void setType(char t) {
     OrderType temp = GetOrderType(t);
@@ -166,4 +189,4 @@ void setIsBuy(boolean o_isbuy)
   isBuy = o_isbuy;
 }
 
-#endef
+#endif
