@@ -52,6 +52,10 @@ private:
   bool isBuy;
   string symbol;
 public:
+
+  Order* buildOrder(char otype, int user_oid=0, int user_id=0, int o_price=0, int o_qty=0, bool o_side=false, string symbol="");
+
+  // These should only be used by tests and not publicly
   //universal constructor through default values
   //perhaps split out into seperate functions
   Order(char otype, int user_oid=0, int user_id=0, int o_price=0, int o_qty=0, bool o_side=false, string symbol="");
@@ -92,6 +96,15 @@ public:
   bool getIsBuy() const;
   void setIsBuy(bool);
 };
+
+Order * Order::buildOrder(char otype, int user_oid, int user_id, int o_price, int o_qty, bool o_side, string o_symbol )
+{
+  OrderType ot = GetOrderType(otype);
+  if ( ot != eINVALID && ot != eLAST ) {
+    return new Order(ot, user_oid, user_id, o_price, o_qty, o_side, o_symbol);
+  } else {
+    return null;
+}
 
 Order::Order( char ottype, int user_oid, int user_id, int o_price, int o_qty, bool o_side, string o_symbol )
     : Order( GetOrderType(ottype), user_oid, user_id, o_price, o_qty, o_side, o_symbol)
@@ -178,6 +191,28 @@ sets value to input bool, true for buy
 void Order::setIsBuy(bool o_isbuy)
 {
   isBuy = o_isbuy;
+}
+
+bool operator==(const Order &rhs, const Order &lhs) {
+  return ( rhs.getUserOrderId() == lhs.getUserOrderId() &&
+           rhs.getUser() == lhs.getUser() &&
+           rhs.getPrice() == lhs.getPrice() &&
+           rhs.getQty() == lhs.getQty() &&
+           rhs.getType() == lhs.getType() &&
+           rhs.getIsBuy() == rhs.getIsBuy() &&
+           rhs.getSymbol() == lhs.getSymbol()
+    );
+}
+
+bool operator!=(const Order& rhs, const Order& lhs) {
+  return ( rhs.getUserOrderId() != lhs.getUserOrderId() ||
+           rhs.getUser() != lhs.getUser() ||
+           rhs.getPrice() != lhs.getPrice() ||
+           rhs.getQty() != lhs.getQty() ||
+           rhs.getType() != lhs.getType() ||
+           rhs.getIsBuy() != rhs.getIsBuy() ||
+           rhs.getSymbol() != lhs.getSymbol()
+    );
 }
 
 #endif

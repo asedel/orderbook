@@ -8,6 +8,10 @@
 BOOST_AUTO_TEST_CASE( my_test )
 {
   Order myOrder1('N', 1, 2, 3, 4, true, "IBM");
+  Order *pMyOrder1('N', 1, 2, 3, 4, true, "IBM");
+
+  BOOST_CHECK( myOrder1 == *pMyOrder1 );
+  delete pMyOrder1;
 
   //check all fields
 
