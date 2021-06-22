@@ -140,13 +140,11 @@ void OrderBook::executeMarketBuy( Order *o ) {
         mgr->publishTrade(o, front);
         front->setQty( front->getQty() - o->getQty() );
         o->setQty(0); //this will break us out
-        //@publish trade
       } else {
         //o is bigger so we can remove front entirely which could nuke the level
         mgr->publishTrade(front, o);
         o->setQty( o->getQty() - front->getQty() );
         mgr->cancelOrder(front);
-        //@todo publish trade
       }
     }
   }
@@ -164,16 +162,22 @@ void OrderBook::executeMarketSell( Order *o ) {
         mgr->publishTrade(o, front);
         front->setQty( front->getQty() - o->getQty() );
         o->setQty(0); //this will break us out
-        //@publish trade
       } else {
         //o is bigger so we can remove front entirely which could nuke the level
         mgr->publishTrade(front, o);
         o->setQty( o->getQty() - front->getQty() );
         mgr->cancelOrder(front);
-        //@todo publish trade
       }
     }
   }
+}
+
+void OrderBook::executeBuy( Order *o ) {
+
+}
+
+void OrderBook::executeSell( Order *o ) {
+
 }
 
 #endif

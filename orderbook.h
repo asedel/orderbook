@@ -100,55 +100,13 @@ public:
       to 0 and then went negative!
    */
 
-  int getBestBidPrice() {
-    if ( !bids.empty() ) {
-      return bids.back().l_price;
-    }
-    else {
-      return 0;
-    }
-  }
+  int getBestBidPrice();
+  int getBestBidQty();
+  Level* getBestBidLevel();
 
-  Level* getBestBidLevel() {
-    if ( !bids.empty() ) {
-      return &all_levels[bids.back().l_ptr];
-    } else {
-      return NULL;
-    }
-  }
-
-  int getBestBidQty() {
-    if ( !bids.empty() ) {
-      return all_levels[bids.back().l_ptr].getQty();
-    } else {
-      return 0;
-    }
-  }
-
-  int getBestOfferPrice() {
-    if ( !asks.empty() ) {
-      return asks.front().l_price;
-    }
-    else {
-      return 0;
-    }
-  }
-
-  Level* getBestOfferLevel() {
-    if ( !bids.empty() ) {
-      return &all_levels[asks.front().l_ptr];
-    } else {
-      return NULL;
-    }
-  }
-
-  int getBestOfferQty() {
-    if ( !asks.empty() ) {
-      return all_levels[asks.front().l_ptr].getQty();
-    } else {
-      return 0;
-    }
-  }
+  int getBestOfferPrice();
+  int getBestOfferQty();
+  Level* getBestOfferLevel();
 
 private:
   const string& symbol;
@@ -162,6 +120,8 @@ private:
   void executeOrder( Order *o );
   void executeMarketBuy( Order *o);
   void executeMarketSell( Order *o);
+  void executeBuy( Order *o);
+  void executeSell( Order *o);
   void insertOrder( Order *o, bool isTob );
   void deleteLevel( Order *o );
   void tobChange(Order *o);
@@ -175,6 +135,56 @@ inline OrderBook::OrderBook(const string& symbol, OrderManager *mgr, int num_lev
   , mgr(mgr)
 {
   flushOrders();
+}
+
+inline int OrderBook::getBestBidPrice() {
+  if ( !bids.empty() ) {
+    return bids.back().l_price;
+  }
+  else {
+    return 0;
+  }
+}
+
+inline Level* OrderBook::getBestBidLevel() {
+  if ( !bids.empty() ) {
+    return &all_levels[bids.back().l_ptr];
+  } else {
+    return NULL;
+  }
+}
+
+inline int OrderBook::getBestBidQty() {
+  if ( !bids.empty() ) {
+    return all_levels[bids.back().l_ptr].getQty();
+  } else {
+    return 0;
+  }
+}
+
+inline int OrderBook::getBestOfferPrice() {
+  if ( !asks.empty() ) {
+    return asks.front().l_price;
+  }
+  else {
+    return 0;
+  }
+}
+
+inline Level* OrderBook::getBestOfferLevel() {
+  if ( !bids.empty() ) {
+    return &all_levels[asks.front().l_ptr];
+  } else {
+    return NULL;
+  }
+}
+
+inline int OrderBook::getBestOfferQty() {
+  if ( !asks.empty() ) {
+    return all_levels[asks.front().l_ptr].getQty();
+  } else {
+    return 0;
+  }
 }
 
 inline void OrderBook::flushOrders() {
@@ -330,8 +340,6 @@ inline void OrderBook::cancelOrder(Order *order) {
   if ( all_levels[lvl_id].getQty() == 0 ) {
     deleteLevel(order);
   }
-
-  //@TODO message order cancelled
 }
 
 //also can be called into by execute
@@ -375,7 +383,11 @@ inline void OrderBook::executeOrder( Order *o ) {
       executeMarketSell(o);
     }
   } else {
-    //@TODO Real fun we can have partials
+    if ( o->getIsBuy() ) {
+      executeBuy(o);
+    } else {
+      executeSell(o);
+    }
   }
 }
 

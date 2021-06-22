@@ -1,6 +1,7 @@
+*~
 *.docx
 *.csv
 demo
 test
 *.dSYM
-
+bsocket
