@@ -15,6 +15,8 @@ public:
   OrderManager();
   ~OrderManager();
 
+  void handle(Order *o);
+  void ackOrder(Order *o);
   void addOrder(Order *o);
   void cancelOrder(Order *o);
   void flushOrders();
@@ -32,7 +34,27 @@ private:
 
 OrderManager::OrderManager() {}
 
-void OrderManager::addOrder(Order *o) {
+inline void handle(Order *order) {
+  switch ( order->getType() ) {
+    case Order::eFLUSH:
+      flushOrders();
+      break;
+    case Order::eCANCEL:
+      ackOrder(o);
+      cancelOrder(o);
+      break;
+    case Order::eNEW:
+      ackOrder(o);
+      addOrder(o);
+      break;
+    default: //unreachable as its prehandled
+      result = NULL;
+      break;
+  }
+  }
+}
+
+inline void OrderManager::addOrder(Order *o) {
   orders_by_id[o->getUserOrderId()] = o;
 
   OrderBook *p = NULL;
@@ -46,7 +68,7 @@ void OrderManager::addOrder(Order *o) {
   p->addOrder(o);
 }
 
-void OrderManager::cancelOrder(Order *o) {
+inline void OrderManager::cancelOrder(Order *o) {
   auto it = orders_by_id.find(o->getUserOrderId());
   if ( it != orders_by_id.end() ) {
     Order *temp = it->second;
@@ -77,6 +99,10 @@ inline OrderManager::~OrderManager() {
     delete it.second;
   }
   book_map.clear();
+}
+
+inline OrderManager::ackOrder(Order *o) {
+  //@todo acknowledge the order
 }
 
 #endif

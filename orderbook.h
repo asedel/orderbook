@@ -24,7 +24,8 @@ using std::vector;
     32.  If we wanted to support arbitrarilty large books I would
     switch implementation to a hybrid skip-list so that innermost
     levels were in a vector but skip list handled levels outside where
-    usually little no to activity takes place
+    usually little no to activity takes place.. at least once the book
+    size approaches >256 as performance starts to suffer at O(n)
 
     another potential optimization because we often see inner levels
     flicker in and out is to mark a level as invalid but not actually
@@ -32,11 +33,46 @@ using std::vector;
     to rejuggle all of the levels.  thus it is usually beneficial to
     keep a padding of 'level' objects both above and below the core
     cluster to avoid unneeded shuffling when inside and outside levels
-    flicker in and out.
+    flicker in and out. this would thus utilize a valid flag and not
+    marking the innermost and outermost levels as 'free' immediately
+    but rather into a secondary free pool to only use if none other
+    are available. this would require reworking some bits of how the
+    pool works but would be useful since in most markets most of the
+    activity is at the center of the book and those levels are
+    constantly coming in and out of existence, and the work to move
+    the sorted arrays around is basically just thrashing and wasted work.
 
     also note that for these size books a linear search will
     outperform binary search and will be more friendly to cache and
     TLB and branch prediction.
+
+    Orderbook is the major workhorse since the Level sides are
+    basically FIFO stacks for the given price of order lookup.
+
+    by fixing our sizes the vectors effectively become arrays offering O(1) lookup,
+    and avoids resizing penalties which would periodically disrupt latency
+
+    another enhancment would be to force orderID's to be consecutive
+    and constrained so that we could use a vector for the storage
+    instead of a hash structure; similary having symbolID's that are
+    tightly banded together based on knowledge of all tradable symbols
+    could improve performance as well.
+
+    along those lines of the orderID's being tightly constrained we
+    could look into using a circular buffer for id's so as to resuse
+    the space from a dead order ID, but to do this we would have to
+    have a notion of how many "live orders" we would want to support
+    so as to properly size the circular buffer.
+
+    also note that all publishing is deffered onto the secondary
+    thread by using a shared memory queue so another constraint there
+    would be performance tuning to see how big we need to make that
+    queue so we don't get backed up, but dont waste too much excessive
+    memory.  unfortunately we do have to perform a copy of the
+    messages because the data sources they derive from are likely to
+    potentially change before the information is published since most
+    likely in reality we'd not be publishing to disk but back across a
+    wire.
 
 **/
 class OrderBook {
@@ -54,6 +90,8 @@ public:
       I didn't want to build the checks in here because 99% of the time both sides should have entries
       and handling the nonconforming cases isn't attrocious
    */
+  boolean isValid() { return tob_bid && tob_ask; }
+
   int getBestBidPrice() { return tob_bid->getPrice(); }
   int getBestBidQty() { return tob_bid->getQty(); }
   int getBestOfferPrice() { return tob_ask->getPrice(); }
@@ -70,6 +108,7 @@ private:
   pool<Level, level_id_t, DEFAULT_NUM_LEVELS * 2> all_levels; //single allocation
 
   void executeOrder(Order *o);
+  void insertOrder(Order *o, bool isTob);
 
 };
 
@@ -92,27 +131,6 @@ inline void OrderBook::flushOrders() {
 
 inline void OrderBook::addOrder(Order *o)
 {
-  /**
-  {
-    sorted_levels_t *sorted_levels = o->getIsBuy() ? &bids : &asks;
-
-    //Search descending since best prices are at top
-    auto insertion = sorted_levels->end();
-    bool found = false;
-    while ( insertion-- != sorted_levels.begin() )
-    {
-      PriceLevel &curprice = *insertion;
-      if ( curprice.l_price == o->getPrice() ) {
-        o->setLevelId( curprice.l_ptr );
-        found = true;
-        break;
-      } else if ( o->getPrice() > curprice.l_price ) {
-        // insertion will be -1 if price < all prices
-        break;
-      }
-    }
-  }
-  */
 
   if ( o->getIsBuy() ) {
     // buy/bid
@@ -129,16 +147,16 @@ inline void OrderBook::addOrder(Order *o)
           if ( tob_ask && o->getPrice() >= getBestOfferPrice() ) {
             executeOrder(o);
           } else {
-            //@todo top insert logic
+            insertOrder(o, true);
           }
         } else if ( o->getPrice() == getBestBidPrice() ) {
           tob_bid->addOrder(o);
         } else {
-          //@todo find and insert logic
+          insertOrder(o, false);
         }
       }
       else {
-        //insert level
+        insertOrder(o, true);
       }
     }
   }
@@ -157,19 +175,57 @@ inline void OrderBook::addOrder(Order *o)
           if ( tob_bid && o->getPrice() <= getBestBidPrice() ) {
             executeOrder(o);
           } else {
-            //@todo top insert logic
+            insertOrder(o, true);
           }
         } else if ( o->getPrice() == getBestOfferPrice() ) {
           tob_ask->addOrder(o);
         } else {
-          //@todo find and insert logic
+          insertOrder(o, false)
         }
       }
       else {
-        //insert level
+        insertOrder(o, true);
       }
     }
   }
+}
+
+inline void OrderBook::insertOrder(Order *order, bool tob)
+{
+  sorted_levels_t *sorted_levels = order->getIsBuy() ? &bids : &asks;
+
+  //Search descending since best prices are at top
+  auto insertion = sorted_levels->end();
+  bool found = false;
+  while ( insertion-- != sorted_levels.begin() )
+  {
+    PriceLevel &curprice = *insertion;
+    if ( curprice.l_price == order->getPrice() ) {
+      order->setLevelId( curprice.l_ptr );
+      found = true;
+      break;
+    } else if ( order->getPrice() > curprice.l_price ) {
+      // insertion will be -1 if price < all prices
+      break;
+    }
+  }
+  if ( !found ) {
+    auto lvl_id = all_levels.alloc();
+    order->setLevelId(lvl_id);
+    Level& lvl = &all_levels[lvl_id];
+    lvl.setPrice( order->getPrice() );
+    lvl.setQty( 0 );
+    lvl.setValid( true );
+    PriceLevel const px(order->getPrice(), lvl_id);
+    ++insertion;
+    sorted_levels->insert(insertion_point, px);
+  }
+  all_levels[order->getLevelId()].addOrder(order);
+
+  if (tob) {
+    //@TODO PUBLISH TOB CHANGE
+  }
+
 }
 
 inline void OrderBook::cancelOrder(Order *o)

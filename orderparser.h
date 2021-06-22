@@ -45,18 +45,21 @@ Order* OrderParser::parse(const string& input) {
       result = Order::buildOrder(ot);
       break;
     case Order::eCANCEL:
-      result = Order::buildOrder(ot,
-                          std::stoi(strs[1]), //user
-                          std::stoi(strs[2])); //uoid
+      result = Order::buildOrder(
+        ot,
+        std::stoi(strs[1]), //user
+        std::stoi(strs[2]) //uoid
+        );
       break;
     case Order::eNEW:
-      result = Order::buildOrder(ot,
-                          std::stoi(strs[6]), //uoid
-                          std::stoi(strs[1]), //user
-                          std::stoi(strs[3]), //price
-                          std::stoi(strs[4]), //qty
-                          strs[5][0] == 'B' ? true : false, //side
-                          strs[2] //symbol
+      result = Order::buildOrder(
+        ot,
+        std::stoi(strs[6]), //uoid
+        std::stoi(strs[1]), //user
+        std::stoi(strs[3]), //price
+        std::stoi(strs[4]), //qty
+        strs[5][0] == 'B' ? true : false, //side
+        strs[2] //symbol
         );
       break;
     default: //unreachable as its prehandled

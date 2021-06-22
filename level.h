@@ -42,7 +42,7 @@ public:
   void cancelOrder(Order *o);
   void flushOrders();
   void setPrice(int price);
-  void setValid(bool b);
+  void setValid(bool b); //reserved for future usage..
 
   /* accessors */
   int getQty() const { return qty; }
@@ -76,7 +76,7 @@ inline void Level::cancelOrder(Order *o) {
   std::cerr << "Couldn't remove order in level of price " << o->getPrice()
             << " for symbol " << o->getSymbol()
             << " for orderID << " << o->getUserOrderId()
-            <<  ". It was not found" << std::endl;
+            << ". It was not found" << std::endl;
 }
 
 /** Delete all orders and then clear the array */
