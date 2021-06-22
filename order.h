@@ -128,10 +128,6 @@ Order::Order( OrderType ot, int user_oid, int user_id, int o_price, int o_qty, b
   , isBuy(o_side)
   , symbol(o_symbol)
 {
-  if ( ot == eINVALID || ot == eLAST ) {
-    throw InvalidOTypeException();
-  }
-
   otype = ot;
 }
 

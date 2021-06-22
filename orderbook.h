@@ -1,11 +1,14 @@
 #ifndef ORDERBOOK_H
 #define ORDERBOOK_H
 
+#include <iostream>
 #include <string>
 #include <vector>
 
 using std::string;
 using std::vector;
+using std::cout;
+using std::endl;
 
 #include "util.h"
 #include "order.h"
@@ -124,7 +127,7 @@ public:
 
   int getBestOfferPrice() {
     if ( !asks.empty() ) {
-      return asks.back().l_price;
+      return asks.front().l_price;
     }
     else {
       return 0;
@@ -133,7 +136,7 @@ public:
 
   Level* getBestOfferLevel() {
     if ( !bids.empty() ) {
-      return &all_levels[asks.back().l_ptr];
+      return &all_levels[asks.front().l_ptr];
     } else {
       return NULL;
     }
@@ -141,7 +144,7 @@ public:
 
   int getBestOfferQty() {
     if ( !asks.empty() ) {
-      return all_levels[asks.back().l_ptr].getQty();
+      return all_levels[asks.front().l_ptr].getQty();
     } else {
       return 0;
     }
@@ -161,6 +164,7 @@ private:
   void executeMarketSell( Order *o);
   void insertOrder( Order *o, bool isTob );
   void deleteLevel( Order *o );
+  void tobChange(Order *o);
 
 };
 
@@ -195,17 +199,18 @@ void OrderBook::addOrder(Order *o) {
       }
     }
     else {
-      if ( getBestBidPrice() != 0 ) {
+      if ( !bids.empty() ) {
         if ( o->getPrice() > getBestBidPrice() ) {
           if ( getBestOfferPrice() != 0 && o->getPrice() >= getBestOfferPrice() ) {
             executeOrder(o);
+            //@TODO TOB CHANGE
           } else {
             insertOrder(o, true);
           }
-          //@TODO TOB CHANGE
+
         } else if ( o->getPrice() == getBestBidPrice() ) {
           getBestBidLevel()->addOrder(o);
-          //@TODO TOB CHANGE
+          tobChange(o);
         } else {
           insertOrder(o, false);
         }
@@ -226,17 +231,17 @@ void OrderBook::addOrder(Order *o) {
       }
     }
     else {
-      if ( getBestOfferPrice() != 0 ) {
+      if ( ! asks.empty() ) {
         if ( o->getPrice() < getBestOfferPrice() ) {
           if ( getBestBidPrice() != 0 && o->getPrice() <= getBestBidPrice() ) {
             executeOrder(o);
+            //@TOB CHANGE
           } else {
             insertOrder(o, true);
           }
-          //@TOB CHANGE
         } else if ( o->getPrice() == getBestOfferPrice() ) {
           getBestOfferLevel()->addOrder(o);
-          //@TOB CHANGE
+          tobChange(o);
         } else {
           insertOrder(o, false);
         }
@@ -280,7 +285,7 @@ inline void OrderBook::insertOrder(Order *order, bool tob) {
   all_levels[order->getLevelId()].addOrder(order);
 
   if (tob) {
-    //@TODO PUBLISH TOB CHANGE
+    tobChange(order);
   }
 
 }
@@ -324,7 +329,7 @@ inline void OrderBook::deleteLevel( Order *o ) {
   all_levels.free(lvl_id);
 
   if ( changeTOB ) {
-    //@todo notify tob change
+    tobChange(o);
   }
 }
 
@@ -340,5 +345,32 @@ inline void OrderBook::executeOrder( Order *o ) {
   }
 }
 
+inline void OrderBook::tobChange(Order *o) {
+  int price;
+  int quantity;
+  string p_s;
+  string q_s;
+  char side;
+
+  if ( o->getIsBuy() ) {
+    price = getBestBidPrice();
+    quantity = getBestBidQty();
+    side = 'B';
+  } else {
+    price = getBestOfferPrice();
+    quantity = getBestOfferQty();
+    side = 'S';
+  }
+
+  if ( price != 0 && quantity != 0 ) {
+    p_s = std::to_string(price);
+    q_s = std::to_string(quantity);
+  } else {
+    p_s = "-";
+    q_s = "-";
+  }
+
+  cout << "B," << side << "," << p_s << "," << q_s << endl;
+}
 
 #endif

@@ -78,13 +78,13 @@ inline void Level::setValid(bool valid) {
 }
 
 inline void Level::addOrder(Order *o) {
-  assert( o->getPrice() != price ); //"We shouldn't be adding this order to this price level");
+  assert( o->getPrice() == price ); //"We shouldn't be adding this order to this price level");
   qty += o->getQty();
   orders.push_back(o);
 }
 
 inline void Level::cancelOrder(Order *o) {
-  assert( o->getPrice() != price );  //"We shouldn't be adding this order to this price level");
+  assert( o->getPrice() == price );  //"We shouldn't be adding this order to this price level");
   for ( auto it = orders.begin(); it != orders.end(); ++it ) {
     if ( (*it)->getUserOrderId() == o->getUserOrderId() ) {
       qty -= o->getQty();

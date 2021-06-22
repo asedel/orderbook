@@ -7,6 +7,8 @@
 
 using std::string;
 using std::unordered_map;
+using std::cout;
+using std::endl;
 
 #include "orderbook.h"
 
@@ -61,6 +63,7 @@ inline void OrderManager::addOrder(Order *o) {
   if ( it == book_map.end() ) {
     p = new OrderBook( o->getSymbol(), this );
     o->setBook(p);
+    book_map[o->getSymbol()] = p;
   } else {
     p = it->second;
   }
@@ -102,7 +105,7 @@ inline OrderManager::~OrderManager() {
 }
 
 inline void OrderManager::ackOrder(Order *o) {
-  //@todo acknowledge the order
+  cout << "A," << o->getUser() << "," << o->getUserOrderId() << endl;
 }
 
 /**  These funcs from OrderBook arent defined until now because we need OrderManager defined first */
