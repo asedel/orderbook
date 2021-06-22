@@ -7,9 +7,7 @@
 #include <fstream>
 
 //my headers
-#include "orderparser.h"
-#include "orderbook.h"
-
+#include "ordermanager.h"
 
 using std::cin;
 using std::cout;
@@ -19,5 +17,8 @@ using std::string;
 int main(int c, char **argv) {
 
   cout << "Welcome to the Kraken Demo program!" << endl;
+
+  OrderManager om;
+
   return 0;
 }
