@@ -34,23 +34,22 @@ private:
 
 OrderManager::OrderManager() {}
 
-inline void handle(Order *order) {
+inline void OrderManager::handle(Order *order) {
   switch ( order->getType() ) {
     case Order::eFLUSH:
       flushOrders();
       break;
     case Order::eCANCEL:
-      ackOrder(o);
-      cancelOrder(o);
+      ackOrder(order);
+      cancelOrder(order);
       break;
     case Order::eNEW:
-      ackOrder(o);
-      addOrder(o);
+      ackOrder(order);
+      addOrder(order);
       break;
     default: //unreachable as its prehandled
-      result = NULL;
+      std::cerr << "Unhandled invalid order type" << std::endl;
       break;
-  }
   }
 }
 
@@ -101,7 +100,7 @@ inline OrderManager::~OrderManager() {
   book_map.clear();
 }
 
-inline OrderManager::ackOrder(Order *o) {
+inline void OrderManager::ackOrder(Order *o) {
   //@todo acknowledge the order
 }
 

@@ -7,6 +7,7 @@
 using std::string;
 using std::vector;
 
+#include "util.h"
 #include "order.h"
 #include "level.h"
 #include "pool.h"
@@ -77,7 +78,6 @@ using std::vector;
 **/
 class OrderBook {
 public:
-  typedef PriceLevel::level_id_t level_id_t;
   static const int DEFAULT_NUM_LEVELS = 16;
   OrderBook(const string& symbol, int num_levels = DEFAULT_NUM_LEVELS);
 
@@ -90,7 +90,7 @@ public:
       I didn't want to build the checks in here because 99% of the time both sides should have entries
       and handling the nonconforming cases isn't attrocious
    */
-  boolean isValid() { return tob_bid && tob_ask; }
+  bool isValid() { return tob_bid && tob_ask; }
 
   int getBestBidPrice() { return tob_bid->getPrice(); }
   int getBestBidQty() { return tob_bid->getQty(); }
@@ -129,9 +129,7 @@ inline void OrderBook::flushOrders() {
   bids.reserve(num_levels);
 }
 
-inline void OrderBook::addOrder(Order *o)
-{
-
+inline void OrderBook::addOrder(Order *o) {
   if ( o->getIsBuy() ) {
     // buy/bid
     if ( o->getPrice() == 0 ) {
@@ -180,7 +178,7 @@ inline void OrderBook::addOrder(Order *o)
         } else if ( o->getPrice() == getBestOfferPrice() ) {
           tob_ask->addOrder(o);
         } else {
-          insertOrder(o, false)
+          insertOrder(o, false);
         }
       }
       else {
@@ -190,14 +188,13 @@ inline void OrderBook::addOrder(Order *o)
   }
 }
 
-inline void OrderBook::insertOrder(Order *order, bool tob)
-{
+inline void OrderBook::insertOrder(Order *order, bool tob) {
   sorted_levels_t *sorted_levels = order->getIsBuy() ? &bids : &asks;
 
   //Search descending since best prices are at top
   auto insertion = sorted_levels->end();
   bool found = false;
-  while ( insertion-- != sorted_levels.begin() )
+  while ( insertion-- != sorted_levels->begin() )
   {
     PriceLevel &curprice = *insertion;
     if ( curprice.l_price == order->getPrice() ) {
@@ -212,13 +209,13 @@ inline void OrderBook::insertOrder(Order *order, bool tob)
   if ( !found ) {
     auto lvl_id = all_levels.alloc();
     order->setLevelId(lvl_id);
-    Level& lvl = &all_levels[lvl_id];
+    Level& lvl = all_levels[lvl_id];
     lvl.setPrice( order->getPrice() );
     lvl.setQty( 0 );
     lvl.setValid( true );
     PriceLevel const px(order->getPrice(), lvl_id);
     ++insertion;
-    sorted_levels->insert(insertion_point, px);
+    sorted_levels->insert(insertion, px);
   }
   all_levels[order->getLevelId()].addOrder(order);
 
@@ -228,14 +225,12 @@ inline void OrderBook::insertOrder(Order *order, bool tob)
 
 }
 
-inline void OrderBook::cancelOrder(Order *o)
-{
+inline void OrderBook::cancelOrder(Order *o) {
   //need to get to the level so we can remove it
   //@TODO!!
 }
 
-inline void OrderBook::executeOrder(Order *o)
-{
+inline void OrderBook::executeOrder(Order *o) {
   //@TODO
 }
 

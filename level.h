@@ -5,6 +5,7 @@
 #include <list>
 #include <cassert>
 
+#include "util.h"
 #include "order.h"
 
 using std::list;
@@ -14,7 +15,11 @@ using std::list;
  */
 class PriceLevel {
 public:
-  enum class level_id_t : uint32_t {};
+  PriceLevel( int price, level_id_t lid )
+    : l_price(price)
+    , l_ptr(lid)
+    {}
+
   int l_price;
   level_id_t l_ptr;
 };
@@ -42,6 +47,7 @@ public:
   void cancelOrder(Order *o);
   void flushOrders();
   void setPrice(int price);
+  void setQty(int qty);
   void setValid(bool b); //reserved for future usage..
 
   /* accessors */
@@ -56,6 +62,18 @@ private:
   int qty; // total qty at level
   list<Order *> orders; // kept sorted by time
 };
+
+inline void Level::setPrice(int price) {
+  this->price = price;
+}
+
+inline void Level::setQty(int qty) {
+  this->qty = qty;
+}
+
+inline void Level::setValid(bool valid) {
+  this->valid = valid;
+}
 
 inline void Level::addOrder(Order *o) {
   assert( o->getPrice() != price ); //"We shouldn't be adding this order to this price level");

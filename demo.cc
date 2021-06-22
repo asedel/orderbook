@@ -24,7 +24,7 @@ int main(int c, char **argv) {
   //read input
   string input = "foo";
 
-  Order order = OrderParser::parse(input);
+  Order *order = OrderParser::parse(input);
   order_mgr.handle(order);
 
   return 0;

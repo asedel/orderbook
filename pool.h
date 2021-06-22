@@ -49,7 +49,7 @@ public:
       //only insert until we reach size
       if ( t_allocated.size() <= SIZE ) {
         auto res = ptr_t( t_allocated.size() );
-        t_free.push_back(T());
+        t_allocated.push_back(T());
         return res;
       } else
       {

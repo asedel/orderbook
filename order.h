@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 
+#include "util.h"
 #include "oexception.h"
 
 using std::string;
@@ -52,7 +53,7 @@ private:
   int user;
   int price;
   int qty;
-  int levelId;
+  level_id_t levelId;
   OrderType otype;
   bool isBuy;
   OrderBook *obook;
@@ -106,8 +107,8 @@ public:
   OrderBook* getBook() const;
   void setBook(OrderBook *);
 
-  int getLevelId() const;
-  void setLevelId(int levelId);
+  level_id_t getLevelId() const;
+  void setLevelId(level_id_t levelId);
 };
 
 Order::Order( char ottype, int user_oid, int user_id, int o_price, int o_qty, bool o_side, string o_symbol )
@@ -129,14 +130,12 @@ Order::Order( OrderType ot, int user_oid, int user_id, int o_price, int o_qty, b
   otype = ot;
 }
 
-inline Order* Order::buildOrder(char otype, int user_oid, int user_id, int o_price, int o_qty, bool o_side, string o_symbol )
-{
+inline Order* Order::buildOrder(char otype, int user_oid, int user_id, int o_price, int o_qty, bool o_side, string o_symbol ) {
   OrderType ot = GetOrderType(otype);
   return buildOrder(ot, user_oid, user_id, o_price, o_qty, o_side, o_symbol);
 }
 
-inline Order* Order::buildOrder(OrderType ot, int user_oid, int user_id, int o_price, int o_qty, bool o_side, string o_symbol )
-{
+inline Order* Order::buildOrder(OrderType ot, int user_oid, int user_id, int o_price, int o_qty, bool o_side, string o_symbol ) {
   if ( ot != eINVALID && ot != eLAST ) {
     Order *p = new Order(ot, user_oid, user_id, o_price, o_qty, o_side, o_symbol);
     return p;
@@ -145,33 +144,27 @@ inline Order* Order::buildOrder(OrderType ot, int user_oid, int user_id, int o_p
   }
 }
 
-inline int Order::getUserOrderId() const
-{
+inline int Order::getUserOrderId() const {
   return userOrderId;
 }
 
-inline void Order::setUserOrderId(int uoid)
-{
+inline void Order::setUserOrderId(int uoid) {
   this->userOrderId = uoid;
 }
 
-inline int Order::getUser() const
-{
+inline int Order::getUser() const {
    return user;
 }
 
-inline void Order::setUser( int user )
-{
+inline void Order::setUser( int user ) {
   this->user = user;
 }
 
-inline string Order::getSymbol() const
-{
+inline string Order::getSymbol() const {
   return symbol;
 }
 
-inline void Order::setSymbol(string symbol)
-{
+inline void Order::setSymbol(string symbol) {
   std::swap(this->symbol, symbol);
 }
 
@@ -179,28 +172,23 @@ inline void Order::setSymbol(string&& symbol) {
   this->symbol = std::move(symbol);
 }
 
-inline int Order::getPrice() const
-{
+inline int Order::getPrice() const {
   return price;
 }
 
-inline void Order::setPrice(int o_price)
-{
+inline void Order::setPrice(int o_price) {
   price = o_price;
 }
 
-inline int Order::getQty() const
-{
+inline int Order::getQty() const {
   return qty;
 }
 
-inline void Order::setQty(int o_qty)
-{
+inline void Order::setQty(int o_qty) {
   qty = o_qty;
 }
 
-inline bool Order::getIsBuy() const
-{
+inline bool Order::getIsBuy() const {
   return isBuy;
 }
 
@@ -208,28 +196,23 @@ inline bool Order::getIsBuy() const
 sets value to input bool, true for buy
 @param [in] o_idbuy the desired boolean state
  */
-void Order::setIsBuy(bool o_isbuy)
-{
+void Order::setIsBuy(bool o_isbuy) {
   isBuy = o_isbuy;
 }
 
-inline OrderBook* Order::getBook() const
-{
+inline OrderBook* Order::getBook() const {
   return obook;
 }
 
-inline void Order::setBook(OrderBook *book)
-{
+inline void Order::setBook(OrderBook *book) {
   this->obook = book;
 }
 
-inline int Order::getLevelId() const
-{
+inline level_id_t Order::getLevelId() const {
   return levelId;
 }
 
-inline void Order::setLevelId(int levelId)
-{
+inline void Order::setLevelId(level_id_t levelId) {
   this->levelId = levelId;
 }
 
