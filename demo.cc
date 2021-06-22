@@ -1,4 +1,4 @@
-/* Main file for Kraken Order Book Programming Exercise */
+/* Main file for My Order Book Programming Exercise */
 
 //system headers
 #include <string>
@@ -16,7 +16,7 @@ using std::string;
 
 int main(int c, char **argv) {
 
-  cout << "Welcome to the Kraken Demo program!" << endl;
+  cout << "Welcome to Order Mgmt Demo program!" << endl;
 
   OrderManager om;
 
