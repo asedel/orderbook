@@ -23,3 +23,9 @@ orderparser is quite simple to test.
    1. asio udp network receiver, putting messages into a circular waitfree queue, each element would be granted a generous a very generous buffer sized by size of Order with 20 characters saved for the symbol name. I would transform the message into the tighter 'Order' format before buffering the messages.
    2. work thread pops "Order" messages off the CWQ and processes them, in turn its outgoing publish messages would be written to a second CWQ sized for perhaps 128 byte messages of text which should be long enough for the longest message it would have to deliver
    3. logger thread that pops messages off the second CWQ and writes them to the output file.
+
+
+
+How to build and run: ( where niput file has all spaces and comments removed..)
+make 
+./demo <input_file>
