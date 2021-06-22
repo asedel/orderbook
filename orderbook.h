@@ -146,7 +146,7 @@ inline void OrderBook::addOrder(Order *o)
     //its a sell/ask
     if ( o->getPrice() == 0 ) {
       if ( tob_bid ) {
-        //@todo execution
+        executeOrder(o);
       } else {
         // can't execute report no trade
       }
@@ -155,7 +155,7 @@ inline void OrderBook::addOrder(Order *o)
       if ( tob_ask ) {
         if ( o->getPrice() < getBestOfferPrice() ) {
           if ( tob_bid && o->getPrice() <= getBestBidPrice() ) {
-            //@todo execution
+            executeOrder(o);
           } else {
             //@todo top insert logic
           }
