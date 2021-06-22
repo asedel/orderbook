@@ -191,7 +191,7 @@ void OrderBook::addOrder(Order *o) {
         //@TOB CHANGE
         // no residual allowed
       } else {
-        // can't execute report no trade?
+        // @TODO can't execute report no trade?
       }
     }
     else {
@@ -202,10 +202,10 @@ void OrderBook::addOrder(Order *o) {
           } else {
             insertOrder(o, true);
           }
-          //@TOB CHANGE
+          //@TODO TOB CHANGE
         } else if ( o->getPrice() == getBestBidPrice() ) {
           getBestBidLevel()->addOrder(o);
-          //@TOB CHANGE
+          //@TODO TOB CHANGE
         } else {
           insertOrder(o, false);
         }
@@ -222,7 +222,7 @@ void OrderBook::addOrder(Order *o) {
         executeOrder(o);
         //@TOB CHANGE
       } else {
-        // can't execute report no trade?
+        //@TODO  can't execute report no trade?
       }
     }
     else {

@@ -9,6 +9,7 @@
 //my headers
 #include "ordermanager.h"
 #include "orderparser.h"
+#include "cwfq.h"
 
 using std::cin;
 using std::cout;
@@ -20,7 +21,7 @@ int main(int c, char **argv) {
   cout << "Welcome to Order Mgmt Demo program!" << endl;
 
   OrderManager order_mgr;
-
+  CWFQ::RingFifo<Order, 128> queue;
   //read input
   string input = "foo";
 

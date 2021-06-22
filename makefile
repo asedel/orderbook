@@ -7,9 +7,11 @@ CXX=g++-11
 
 CXXFLAGS += -I/usr/local/include
 
-apps = demo test
+apps = demo test bsocket
 test : util.h order.h orderparser.h ordermanager.h orderbook.h
-demo: util.h order.h orderparser.h ordermanager.h orderbook.h level.h pool.h
+demo: util.h order.h orderparser.h ordermanager.h orderbook.h level.h pool.h cwfq.h
+bsocket:
+
 all : $(apps)
 
 clean:

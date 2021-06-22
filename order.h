@@ -66,6 +66,7 @@ public:
   // These should only be used by tests and not publicly
   //universal constructor through default values
   //perhaps split out into seperate functions
+  Order();
   Order(char otype, int user_oid=0, int user_id=0, int o_price=0, int o_qty=0, bool o_side=false, string symbol="");
   Order(OrderType ot, int user_oid=0, int user_id=0, int o_price=0, int o_qty=0, bool o_side=false, string symbol="");
 
@@ -110,6 +111,10 @@ public:
   level_id_t getLevelId() const;
   void setLevelId(level_id_t levelId);
 };
+
+Order::Order()
+  : Order(eLAST)
+{}
 
 Order::Order( char ottype, int user_oid, int user_id, int o_price, int o_qty, bool o_side, string o_symbol )
     : Order( GetOrderType(ottype), user_oid, user_id, o_price, o_qty, o_side, o_symbol)
