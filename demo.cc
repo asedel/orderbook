@@ -44,20 +44,20 @@ int main(int c, char **argv) {
   //read input
   std::thread read_thread(read_file, argv[1]);
 
-  Order o;
   int counter = 0;
   while ( true ) {
     counter = 0;
     bool result;
-    while ( (result = queue.pop(o)) == false && counter < 5 ) {
+    Order *o = new Order; //todo get these from a pool of Orders
+    while ( (result = queue.pop(*o)) == false && counter < 5 ) {
       sleep(1); //sleep until ready
       ++counter;
     }
-    if ( result == false ) {
+    if ( result == false )
       break;
     }
 
-    order_mgr.handle(&o);
+    order_mgr.handle(o);
   }
 
   read_thread.join();

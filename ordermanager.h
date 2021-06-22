@@ -64,11 +64,11 @@ inline void OrderManager::addOrder(Order *o) {
   auto it = book_map.find(o->getSymbol());
   if ( it == book_map.end() ) {
     p = new OrderBook( o->getSymbol(), this );
-    o->setBook(p);
     book_map[o->getSymbol()] = p;
   } else {
     p = it->second;
   }
+  o->setBook(p);
   p->addOrder(o);
 }
 
@@ -173,11 +173,55 @@ void OrderBook::executeMarketSell( Order *o ) {
 }
 
 void OrderBook::executeBuy( Order *o ) {
+  int p = o->getPrice();
 
+  while ( o->getQty() != 0 && p >= getBestOfferPrice() ) {
+    Level *inside_level = getBestOfferLevel();
+    while ( o->getQty() !=0 && getBestOfferLevel() != 0 ) {
+      Order* front = inside_level->getFrontOrder();
+      if ( o->getQty() < front->getQty() ) {
+        mgr->publishTrade(o, front);
+        front->setQty( front->getQty() - o->getQty() );
+        o->setQty(0); //this will break us out
+      } else {
+        //o is bigger so we can remove front entirely which could nuke the level
+        mgr->publishTrade(front, o);
+        o->setQty( o->getQty() - front->getQty() );
+        mgr->cancelOrder(front);
+      }
+    }
+  }
+  if (o->getQty() != 0) {
+    // this is the remainder order after it swept everything it could
+    // match against that goes into the book
+    mgr->addOrder(o);
+  }
 }
 
 void OrderBook::executeSell( Order *o ) {
+  int p = o->getPrice();
 
+  while ( o->getQty() != 0 && p <= getBestBidPrice() ) {
+    Level *inside_level = getBestBidLevel();
+    while ( o->getQty() !=0 && getBestBidLevel() != 0 ) {
+      Order* front = inside_level->getFrontOrder();
+      if ( o->getQty() < front->getQty() ) {
+        mgr->publishTrade(o, front);
+        front->setQty( front->getQty() - o->getQty() );
+        o->setQty(0); //this will break us out
+      } else {
+        //o is bigger so we can remove front entirely which could nuke the level
+        mgr->publishTrade(front, o);
+        o->setQty( o->getQty() - front->getQty() );
+        mgr->cancelOrder(front);
+      }
+    }
+  }
+  if (o->getQty() != 0) {
+    // this is the remainder order after it swept everything it could
+    // match against that goes into the book
+    mgr->addOrder(o);
+  }
 }
 
 #endif

@@ -316,7 +316,7 @@ inline void OrderBook::insertOrder(Order *order, bool tob) {
     }
   }
   if ( !found ) {
-    auto lvl_id = all_levels.alloc();
+    level_id_t lvl_id = all_levels.alloc();
     order->setLevelId(lvl_id);
     Level& lvl = all_levels[lvl_id];
     lvl.setPrice( order->getPrice() );
