@@ -128,6 +128,26 @@ inline void OrderManager::publishTrade(Order *a, Order *b) {
 
 /**  These funcs from OrderBook arent defined until now because we need OrderManager defined first */
 
+void OrderBook::executeOrder( Order *o ) {
+  if ( o->getPrice() == 0 ) {
+    if ( o->getIsBuy() ) {
+      executeMarketBuy(o);
+    } else {
+      executeMarketSell(o);
+    }
+  } else {
+    if ( o->getIsBuy() ) {
+      executeBuy(o);
+    } else {
+      executeSell(o);
+    }
+  }
+
+  if ( o->getQty() == 0 ) {
+    mgr->cancelOrder(o);
+  }
+}
+
 void OrderBook::executeMarketBuy( Order *o ) {
   /** Simple case of fill and kill against asks*/
 

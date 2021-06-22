@@ -3,6 +3,7 @@ Notes:
 1. netcat would not work for UDP on my machine ( Mac OS X 10.14.6 ) which both wasted significant time trying to get working and made it impossible for me to implement and test the UDP based listener.  However this piece of the code is relatively trivial and just subsists of listening into a buffer of reasonable size, tokenizing the incoming string by lines, and calling the lines iteratively into a handler.
 
 2. the publishing spec is actual contradictory and broken. It doesn't specify that ANYTHING should be published for Cancels ( other than potentially indirect changes to Top of Book, however in scenario 15 which is the only scenario provided using cancels there are some "C" type messges in the expected output which is not explained, further more they are placed before the acknowledgements which is further contradictory and confusing.
+I have encountered a case in scenario 5 for example where without deep logic it is unavoidable to double publish a top of book change because of removal of a level amidst a trade
 
 3. the output format doesn't clearly specify whether multiple TOB changes should be delivered for a given message or not. This vagueness yields vastly complicated and unneeded complexity into the work to manage the book.  That said with sufficient time it is solvable as you could build a stack of messages and simply post process them at the end of processing a given "message" and remove all but the final TOB message for each side.
 

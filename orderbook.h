@@ -375,22 +375,6 @@ inline void OrderBook::deleteLevel( Order *o ) {
   }
 }
 
-inline void OrderBook::executeOrder( Order *o ) {
-  if ( o->getPrice() == 0 ) {
-    if ( o->getIsBuy() ) {
-      executeMarketBuy(o);
-    } else {
-      executeMarketSell(o);
-    }
-  } else {
-    if ( o->getIsBuy() ) {
-      executeBuy(o);
-    } else {
-      executeSell(o);
-    }
-  }
-}
-
 inline void OrderBook::tobChange(Order *o) {
   int price;
   int quantity;
