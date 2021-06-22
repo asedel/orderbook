@@ -19,6 +19,8 @@ public:
 
   void handle(Order *o);
   void ackOrder(Order *o);
+  /* make sure a is the fully filled order*/
+  void publishTrade(Order *a, Order *b);
   void addOrder(Order *o);
   void cancelOrder(Order *o);
   void flushOrders();
@@ -108,6 +110,22 @@ inline void OrderManager::ackOrder(Order *o) {
   cout << "A," << o->getUser() << "," << o->getUserOrderId() << endl;
 }
 
+inline void OrderManager::publishTrade(Order *a, Order *b) {
+  Order *buy, *sell;
+  if ( a->getIsBuy() ) {
+    buy = a;
+    sell = b;
+  } else {
+    buy = b;
+    sell = a;
+  }
+
+  cout << "T," << buy->getUser()  << "," << buy->getUserOrderId()
+       << ","  << sell->getUser() << "," << sell->getUserOrderId()
+       << "," << a->getPrice()
+       << "," << a->getQty();
+}
+
 /**  These funcs from OrderBook arent defined until now because we need OrderManager defined first */
 
 void OrderBook::executeMarketBuy( Order *o ) {
@@ -119,11 +137,13 @@ void OrderBook::executeMarketBuy( Order *o ) {
     while ( o->getQty() != 0 && getBestOfferLevel() == inside_level ) {
       Order* front = inside_level->getFrontOrder();
       if ( o->getQty() < front->getQty() ) {
+        mgr->publishTrade(o, front);
         front->setQty( front->getQty() - o->getQty() );
         o->setQty(0); //this will break us out
         //@publish trade
       } else {
         //o is bigger so we can remove front entirely which could nuke the level
+        mgr->publishTrade(front, o);
         o->setQty( o->getQty() - front->getQty() );
         mgr->cancelOrder(front);
         //@todo publish trade
@@ -141,11 +161,13 @@ void OrderBook::executeMarketSell( Order *o ) {
     while ( o->getQty() != 0 && getBestBidLevel() == inside_level ) {
       Order* front = inside_level->getFrontOrder();
       if ( o->getQty() < front->getQty() ) {
+        mgr->publishTrade(o, front);
         front->setQty( front->getQty() - o->getQty() );
         o->setQty(0); //this will break us out
         //@publish trade
       } else {
         //o is bigger so we can remove front entirely which could nuke the level
+        mgr->publishTrade(front, o);
         o->setQty( o->getQty() - front->getQty() );
         mgr->cancelOrder(front);
         //@todo publish trade
