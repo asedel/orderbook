@@ -1,4 +1,6 @@
 *.docx
 *.csv
+kraken
 test
-test.dSYM
+*.dSYM
+
