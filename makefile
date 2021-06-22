@@ -8,8 +8,8 @@ CXX=g++-11
 CXXFLAGS += -I/usr/local/include
 
 apps = kraken test
-$(apps) : order.h orderparser.h
-
+test : order.h orderparser.h
+kraken: order.h orderparser.h ordermanager.h orderbook.h level.h pool.h
 all : $(apps)
 
 clean:
