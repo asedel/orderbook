@@ -54,6 +54,7 @@ int main(int c, char **argv) {
       ++counter;
     }
     if ( result == false )
+    {
       break;
     }
 

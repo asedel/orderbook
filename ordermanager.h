@@ -123,7 +123,7 @@ inline void OrderManager::publishTrade(Order *a, Order *b) {
   cout << "T," << buy->getUser()  << "," << buy->getUserOrderId()
        << ","  << sell->getUser() << "," << sell->getUserOrderId()
        << "," << a->getPrice()
-       << "," << a->getQty();
+       << "," << a->getQty() << endl;
 }
 
 /**  These funcs from OrderBook arent defined until now because we need OrderManager defined first */

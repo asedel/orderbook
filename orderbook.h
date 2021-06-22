@@ -420,7 +420,16 @@ inline void OrderBook::tobChange(Order *o) {
 }
 
 inline void OrderBook::tobChange(char side, int price, int quantity) {
-  cout << "B," << side << "," << price << "," << quantity << endl;
+  string p_s;
+  string q_s;
+  if ( price != 0 && quantity != 0 ) {
+    p_s = std::to_string(price);
+    q_s = std::to_string(quantity);
+  } else {
+    p_s = "-";
+    q_s = "-";
+  }
+  cout << "B," << side << "," << p_s << "," << q_s << endl;
 }
 
 #endif
