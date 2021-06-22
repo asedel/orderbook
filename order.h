@@ -233,6 +233,7 @@ inline void Order::setLevelId(int levelId)
   this->levelId = levelId;
 }
 
+/** note we are not checking the book pointer and the level id pointer*/
 bool operator==(const Order &rhs, const Order &lhs) {
   return ( rhs.getUserOrderId() == lhs.getUserOrderId() &&
            rhs.getUser() == lhs.getUser() &&
@@ -244,6 +245,7 @@ bool operator==(const Order &rhs, const Order &lhs) {
     );
 }
 
+/** note we are not checking the book pointer and the level id pointer*/
 bool operator!=(const Order& rhs, const Order& lhs) {
   return ( rhs.getUserOrderId() != lhs.getUserOrderId() ||
            rhs.getUser() != lhs.getUser() ||
