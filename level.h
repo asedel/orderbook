@@ -45,6 +45,7 @@ public:
   /* mutators */
   void addOrder(Order *o);
   void cancelOrder(Order *o);
+  void reduceOrder(Order *o, int qty);
   void flushOrders();
   void setPrice(int price);
   void setQty(int qty);

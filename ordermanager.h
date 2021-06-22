@@ -59,7 +59,7 @@ inline void OrderManager::addOrder(Order *o) {
   OrderBook *p = NULL;
   auto it = book_map.find(o->getSymbol());
   if ( it == book_map.end() ) {
-    p = new OrderBook( o->getSymbol() );
+    p = new OrderBook( o->getSymbol(), this );
     o->setBook(p);
   } else {
     p = it->second;

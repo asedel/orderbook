@@ -12,6 +12,8 @@ using std::vector;
 #include "level.h"
 #include "pool.h"
 
+class OrderManager; //fwd declare
+
 /** Models an OrderBook for a single symbol has a bid side and ask side
 
     OrderBook for extensibility would template on type T for the order
@@ -79,7 +81,7 @@ using std::vector;
 class OrderBook {
 public:
   static const int DEFAULT_NUM_LEVELS = 16;
-  OrderBook(const string& symbol, int num_levels = DEFAULT_NUM_LEVELS);
+  OrderBook(const string& symbol, OrderManager *mgr=NULL, int num_levels=DEFAULT_NUM_LEVELS );
 
   /** Insert an Order and carry out approriate matching if need be*/
   void addOrder(Order *o);
@@ -106,15 +108,18 @@ private:
   sorted_levels_t asks; //keep sorted
   sorted_levels_t bids; //keep sorted
   pool<Level, level_id_t, DEFAULT_NUM_LEVELS * 2> all_levels; //single allocation
+  OrderManager* mgr;
 
-  void executeOrder(Order *o);
-  void insertOrder(Order *o, bool isTob);
+  void executeOrder( Order *o );
+  void insertOrder( Order *o, bool isTob );
+  void deleteLevel( Order *o );
 
 };
 
-inline OrderBook::OrderBook(const string& symbol, int num_levels)
+inline OrderBook::OrderBook(const string& symbol, OrderManager *mgr, int num_levels)
   : symbol(symbol)
   , num_levels(num_levels)
+  , mgr(mgr)
 {
   flushOrders();
 }
@@ -129,14 +134,15 @@ inline void OrderBook::flushOrders() {
   bids.reserve(num_levels);
 }
 
-inline void OrderBook::addOrder(Order *o) {
+void OrderBook::addOrder(Order *o) {
   if ( o->getIsBuy() ) {
     // buy/bid
     if ( o->getPrice() == 0 ) {
       if ( tob_ask ) {
         executeOrder(o);
+        // no residual allowed
       } else {
-        // can't execute report no trade
+        // can't execute report no trade?
       }
     }
     else {
@@ -164,7 +170,7 @@ inline void OrderBook::addOrder(Order *o) {
       if ( tob_bid ) {
         executeOrder(o);
       } else {
-        // can't execute report no trade
+        // can't execute report no trade?
       }
     }
     else {
@@ -225,9 +231,31 @@ inline void OrderBook::insertOrder(Order *order, bool tob) {
 
 }
 
-inline void OrderBook::cancelOrder(Order *o) {
-  //need to get to the level so we can remove it
-  //@TODO!!
+inline void OrderBook::cancelOrder(Order *order) {
+  auto lvl_id = order->getLevelId();
+  all_levels[lvl_id].cancelOrder(order); //removes order from list and qty
+  if ( all_levels[lvl_id].getQty() == 0 ) {
+    deleteLevel(order);
+  }
+
+  //@TODO message order cancelled
+}
+
+//also can be called into by execute
+inline void OrderBook::deleteLevel( Order *o ) {
+  level_id_t lvl_id = o->getLevelId();
+  int price = o->getPrice();
+
+  sorted_levels_t *sorted_levels = o->getIsBuy() ? &bids : &asks;
+  auto it = sorted_levels->end();
+  while ( it-- != sorted_levels->begin() ) {
+    if ( it->l_price == price ) {
+      sorted_levels->erase(it);
+      break;
+    }
+  }
+  all_levels.free(lvl_id);
+
 }
 
 inline void OrderBook::executeOrder(Order *o) {
