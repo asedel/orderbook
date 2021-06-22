@@ -165,6 +165,7 @@ private:
   void insertOrder( Order *o, bool isTob );
   void deleteLevel( Order *o );
   void tobChange(Order *o);
+  void tobChange(char side, int price, int quantity);
 
 };
 
@@ -192,8 +193,7 @@ void OrderBook::addOrder(Order *o) {
     if ( o->getPrice() == 0 ) {
       if ( getBestOfferPrice() != 0 ) {
         executeOrder(o);
-        //@TOB CHANGE
-        // no residual allowed
+        tobChange('S', getBestOfferPrice(), getBestOfferQty() );
       } else {
         // @TODO can't execute report no trade?
       }
@@ -202,8 +202,25 @@ void OrderBook::addOrder(Order *o) {
       if ( !bids.empty() ) {
         if ( o->getPrice() > getBestBidPrice() ) {
           if ( getBestOfferPrice() != 0 && o->getPrice() >= getBestOfferPrice() ) {
+            int preBidP = getBestBidPrice();
+            int preBidQ = getBestBidQty();
+            int preAskP = getBestOfferPrice();
+            int preAskQ = getBestOfferQty();
+
             executeOrder(o);
-            //@TODO TOB CHANGE
+
+            int postBidP = getBestBidPrice();
+            int postBidQ = getBestBidQty();
+            int postAskP = getBestOfferPrice();
+            int postAskQ = getBestOfferQty();
+
+            if ( preBidP != postBidP || preBidQ != postBidQ ) {
+              tobChange('B', postBidP, postBidQ);
+            }
+            if ( preAskP != postAskP || preAskQ != postAskQ ) {
+              tobChange('S', postAskP, postAskQ);
+            }
+
           } else {
             insertOrder(o, true);
           }
@@ -225,7 +242,7 @@ void OrderBook::addOrder(Order *o) {
     if ( o->getPrice() == 0 ) {
       if ( getBestBidPrice() != 0 ) {
         executeOrder(o);
-        //@TOB CHANGE
+        tobChange('B', getBestBidPrice(), getBestBidQty() );
       } else {
         //@TODO  can't execute report no trade?
       }
@@ -234,8 +251,25 @@ void OrderBook::addOrder(Order *o) {
       if ( ! asks.empty() ) {
         if ( o->getPrice() < getBestOfferPrice() ) {
           if ( getBestBidPrice() != 0 && o->getPrice() <= getBestBidPrice() ) {
+            int preBidP = getBestBidPrice();
+            int preBidQ = getBestBidQty();
+            int preAskP = getBestOfferPrice();
+            int preAskQ = getBestOfferQty();
+
             executeOrder(o);
-            //@TOB CHANGE
+
+            int postBidP = getBestBidPrice();
+            int postBidQ = getBestBidQty();
+            int postAskP = getBestOfferPrice();
+            int postAskQ = getBestOfferQty();
+
+            if ( preBidP != postBidP || preBidQ != postBidQ ) {
+              tobChange('B', postBidP, postBidQ);
+            }
+            if ( preAskP != postAskP || preAskQ != postAskQ ) {
+              tobChange('S', postAskP, postAskQ);
+            }
+
           } else {
             insertOrder(o, true);
           }
@@ -371,6 +405,10 @@ inline void OrderBook::tobChange(Order *o) {
   }
 
   cout << "B," << side << "," << p_s << "," << q_s << endl;
+}
+
+inline void OrderBook::tobChange(char side, int price, int quantity) {
+  cout << "B," << side << "," << price << "," << quantity << endl;
 }
 
 #endif
