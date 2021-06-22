@@ -56,6 +56,7 @@ public:
   int getPrice() const { return price; }
   int getNumOrders() const { return orders.size(); }
   int getValid() const { return valid; }
+  Order* getFrontOrder() { return orders.front(); }
 
 private:
   bool valid;

@@ -88,22 +88,68 @@ public:
   void cancelOrder(Order *o);
   void flushOrders();
 
-  /** Note you cant call these until both sides of book are valid
-      I didn't want to build the checks in here because 99% of the time both sides should have entries
-      and handling the nonconforming cases isn't attrocious
+  /** Note with more time i would maintain pointers to these that
+      didnt require lookups and switches and which were not guaranteed
+      to be safe to call in cases where a book was empty Luckily we
+      don't allow prices of Zero and quantities of Zero so i can use
+      those as sentinals however in reality this isn't workable as we
+      saw in summer of 2020 the price of some oil future spreads went
+      to 0 and then went negative!
    */
-  bool isValid() { return tob_bid && tob_ask; }
 
-  int getBestBidPrice() { return tob_bid->getPrice(); }
-  int getBestBidQty() { return tob_bid->getQty(); }
-  int getBestOfferPrice() { return tob_ask->getPrice(); }
-  int getBestOfferQty() { return tob_ask->getQty(); }
+  int getBestBidPrice() {
+    if ( !bids.empty() ) {
+      return bids.back().l_price;
+    }
+    else {
+      return 0;
+    }
+  }
+
+  Level* getBestBidLevel() {
+    if ( !bids.empty() ) {
+      return &all_levels[bids.back().l_ptr];
+    } else {
+      return NULL;
+    }
+  }
+
+  int getBestBidQty() {
+    if ( !bids.empty() ) {
+      return all_levels[bids.back().l_ptr].getQty();
+    } else {
+      return 0;
+    }
+  }
+
+  int getBestOfferPrice() {
+    if ( !asks.empty() ) {
+      return asks.back().l_price;
+    }
+    else {
+      return 0;
+    }
+  }
+
+  Level* getBestOfferLevel() {
+    if ( !bids.empty() ) {
+      return &all_levels[asks.back().l_ptr];
+    } else {
+      return NULL;
+    }
+  }
+
+  int getBestOfferQty() {
+    if ( !asks.empty() ) {
+      return all_levels[asks.back().l_ptr].getQty();
+    } else {
+      return 0;
+    }
+  }
 
 private:
   const string& symbol;
   const int num_levels;
-  Level *tob_bid;
-  Level *tob_ask;
   using sorted_levels_t = vector<PriceLevel>;
   sorted_levels_t asks; //keep sorted
   sorted_levels_t bids; //keep sorted
@@ -111,6 +157,8 @@ private:
   OrderManager* mgr;
 
   void executeOrder( Order *o );
+  void executeMarketBuy( Order *o);
+  void executeMarketSell( Order *o);
   void insertOrder( Order *o, bool isTob );
   void deleteLevel( Order *o );
 
@@ -138,23 +186,26 @@ void OrderBook::addOrder(Order *o) {
   if ( o->getIsBuy() ) {
     // buy/bid
     if ( o->getPrice() == 0 ) {
-      if ( tob_ask ) {
+      if ( getBestOfferPrice() != 0 ) {
         executeOrder(o);
+        //@TOB CHANGE
         // no residual allowed
       } else {
         // can't execute report no trade?
       }
     }
     else {
-      if ( tob_bid ) {
+      if ( getBestBidPrice() != 0 ) {
         if ( o->getPrice() > getBestBidPrice() ) {
-          if ( tob_ask && o->getPrice() >= getBestOfferPrice() ) {
+          if ( getBestOfferPrice() != 0 && o->getPrice() >= getBestOfferPrice() ) {
             executeOrder(o);
           } else {
             insertOrder(o, true);
           }
+          //@TOB CHANGE
         } else if ( o->getPrice() == getBestBidPrice() ) {
-          tob_bid->addOrder(o);
+          getBestBidLevel()->addOrder(o);
+          //@TOB CHANGE
         } else {
           insertOrder(o, false);
         }
@@ -167,22 +218,25 @@ void OrderBook::addOrder(Order *o) {
   else {
     //its a sell/ask
     if ( o->getPrice() == 0 ) {
-      if ( tob_bid ) {
+      if ( getBestBidPrice() != 0 ) {
         executeOrder(o);
+        //@TOB CHANGE
       } else {
         // can't execute report no trade?
       }
     }
     else {
-      if ( tob_ask ) {
+      if ( getBestOfferPrice() != 0 ) {
         if ( o->getPrice() < getBestOfferPrice() ) {
-          if ( tob_bid && o->getPrice() <= getBestBidPrice() ) {
+          if ( getBestBidPrice() != 0 && o->getPrice() <= getBestBidPrice() ) {
             executeOrder(o);
           } else {
             insertOrder(o, true);
           }
+          //@TOB CHANGE
         } else if ( o->getPrice() == getBestOfferPrice() ) {
-          tob_ask->addOrder(o);
+          getBestOfferLevel()->addOrder(o);
+          //@TOB CHANGE
         } else {
           insertOrder(o, false);
         }
@@ -198,17 +252,17 @@ inline void OrderBook::insertOrder(Order *order, bool tob) {
   sorted_levels_t *sorted_levels = order->getIsBuy() ? &bids : &asks;
 
   //Search descending since best prices are at top
-  auto insertion = sorted_levels->end();
+  auto it = sorted_levels->end();
   bool found = false;
-  while ( insertion-- != sorted_levels->begin() )
+  while ( it-- != sorted_levels->begin() )
   {
-    PriceLevel &curprice = *insertion;
-    if ( curprice.l_price == order->getPrice() ) {
-      order->setLevelId( curprice.l_ptr );
+    PriceLevel &cur_lvl = *it;
+    if ( cur_lvl.l_price == order->getPrice() ) {
+      order->setLevelId( cur_lvl.l_ptr );
       found = true;
       break;
-    } else if ( order->getPrice() > curprice.l_price ) {
-      // insertion will be -1 if price < all prices
+    } else if ( order->getPrice() > cur_lvl.l_price ) {
+      // it will be -1 if price < all prices
       break;
     }
   }
@@ -220,8 +274,8 @@ inline void OrderBook::insertOrder(Order *order, bool tob) {
     lvl.setQty( 0 );
     lvl.setValid( true );
     PriceLevel const px(order->getPrice(), lvl_id);
-    ++insertion;
-    sorted_levels->insert(insertion, px);
+    ++it;
+    sorted_levels->insert(it, px);
   }
   all_levels[order->getLevelId()].addOrder(order);
 
@@ -243,10 +297,23 @@ inline void OrderBook::cancelOrder(Order *order) {
 
 //also can be called into by execute
 inline void OrderBook::deleteLevel( Order *o ) {
+  bool changeTOB = false;
   level_id_t lvl_id = o->getLevelId();
   int price = o->getPrice();
+  sorted_levels_t *sorted_levels = NULL;
 
-  sorted_levels_t *sorted_levels = o->getIsBuy() ? &bids : &asks;
+  if ( o->getIsBuy() ) {
+    sorted_levels = &bids;
+    if ( o->getPrice() == getBestBidPrice() ) {
+      changeTOB = true;
+    }
+  } else {
+    sorted_levels = &asks;
+    if ( o->getPrice() == getBestOfferPrice() ) {
+      changeTOB = true;
+    }
+  }
+
   auto it = sorted_levels->end();
   while ( it-- != sorted_levels->begin() ) {
     if ( it->l_price == price ) {
@@ -256,10 +323,22 @@ inline void OrderBook::deleteLevel( Order *o ) {
   }
   all_levels.free(lvl_id);
 
+  if ( changeTOB ) {
+    //@todo notify tob change
+  }
 }
 
-inline void OrderBook::executeOrder(Order *o) {
-  //@TODO
+inline void OrderBook::executeOrder( Order *o ) {
+  if ( o->getPrice() == 0 ) {
+    if ( o->getIsBuy() ) {
+      executeMarketBuy(o);
+    } else {
+      executeMarketSell(o);
+    }
+  } else {
+    //@TODO Real fun we can have partials
+  }
 }
+
 
 #endif

@@ -74,6 +74,7 @@ inline void OrderManager::cancelOrder(Order *o) {
     temp->getBook()->cancelOrder(temp);
     //finally delete it
     delete temp;
+    orders_by_id.erase(it);
   }
   else {
     std::cerr << "Can't cancel order that can't be found: " << o->getUserOrderId() << "!" << std::endl;
@@ -102,6 +103,52 @@ inline OrderManager::~OrderManager() {
 
 inline void OrderManager::ackOrder(Order *o) {
   //@todo acknowledge the order
+}
+
+/**  These funcs from OrderBook arent defined until now because we need OrderManager defined first */
+
+void OrderBook::executeMarketBuy( Order *o ) {
+  /** Simple case of fill and kill against asks*/
+
+  while ( o->getQty() != 0 && getBestOfferPrice() != 0 ) {
+    Level *inside_level = getBestOfferLevel();
+    //exhaust all the offer at this level that we can, until we have to switch levels
+    while ( o->getQty() != 0 && getBestOfferLevel() == inside_level ) {
+      Order* front = inside_level->getFrontOrder();
+      if ( o->getQty() < front->getQty() ) {
+        front->setQty( front->getQty() - o->getQty() );
+        o->setQty(0); //this will break us out
+        //@publish trade
+      } else {
+        //o is bigger so we can remove front entirely which could nuke the level
+        o->setQty( o->getQty() - front->getQty() );
+        mgr->cancelOrder(front);
+        //@todo publish trade
+      }
+    }
+  }
+}
+
+void OrderBook::executeMarketSell( Order *o ) {
+  /** Simple case of fill and kill against asks*/
+
+  while ( o->getQty() != 0 && getBestBidPrice() != 0 ) {
+    Level *inside_level = getBestBidLevel();
+    //exhaust all the offer at this level that we can, until we have to switch levels
+    while ( o->getQty() != 0 && getBestBidLevel() == inside_level ) {
+      Order* front = inside_level->getFrontOrder();
+      if ( o->getQty() < front->getQty() ) {
+        front->setQty( front->getQty() - o->getQty() );
+        o->setQty(0); //this will break us out
+        //@publish trade
+      } else {
+        //o is bigger so we can remove front entirely which could nuke the level
+        o->setQty( o->getQty() - front->getQty() );
+        mgr->cancelOrder(front);
+        //@todo publish trade
+      }
+    }
+  }
 }
 
 #endif

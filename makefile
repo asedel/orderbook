@@ -8,7 +8,7 @@ CXX=g++-11
 CXXFLAGS += -I/usr/local/include
 
 apps = demo test
-test : util.h order.h orderparser.h
+test : util.h order.h orderparser.h ordermanager.h orderbook.h
 demo: util.h order.h orderparser.h ordermanager.h orderbook.h level.h pool.h
 all : $(apps)
 
